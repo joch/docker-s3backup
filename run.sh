@@ -11,9 +11,19 @@ S3PATH=${S3PATH:?"S3_PATH required"}
 CRON_SCHEDULE=${CRON_SCHEDULE:-0 * * * *}
 S3CMDPARAMS=${S3CMDPARAMS}
 
+LOCKFILE="/tmp/s3cmd.lock"
 LOG="/var/log/cron.log"
+
 if [ ! -e $LOG ]; then
   mkfifo $LOG
+fi
+
+# Create lock to make sure only one copy is being executed
+if [ -f $LOCKFILE ]; then
+  echo "$LOCKFILE detected, exiting! Already running?" | tee $LOG
+  exit 1
+else
+  touch $LOCKFILE
 fi
 
 echo "access_key=$ACCESS_KEY" >> /root/.s3cfg
@@ -37,3 +47,5 @@ elif [[ $OPTION = "backup" ]]; then
   /usr/local/bin/s3cmd sync /data/ $S3PATH > $LOG 2>&1
   echo "Finished sync: $(date)" > $LOG
 fi
+
+rm -f $LOCKFILE
