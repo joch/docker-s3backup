@@ -18,32 +18,41 @@ echo "access_key=$ACCESS_KEY" >> /root/.s3cfg
 echo "secret_key=$SECRET_KEY" >> /root/.s3cfg
 
 if [ ! -e $LOG ]; then
-  mkfifo $LOG
-fi
-
-# Create lock to make sure only one copy is being executed
-if [ -f $LOCKFILE ]; then
-  echo "$LOCKFILE detected, exiting! Already running?" | tee $LOG
-  exit 1
-else
-  touch $LOCKFILE
+  touch $LOG
 fi
 
 if [[ $OPTION = "start" ]]; then
   CRONFILE="/etc/cron.d/s3backup"
   CRONENV=""
+
+  echo "Found the following files and directores mounted under /data:"
+  echo
+  ls -F /data
+  echo
+
   echo "Adding CRON schedule: $CRON_SCHEDULE"
+  CRONENV="$CRONENV ACCESS_KEY=$ACCESS_KEY"
+  CRONENV="$CRONENV SECRET_KEY=$SECRET_KEY"
   CRONENV="$CRONENV S3PATH=$S3PATH"
-  #CRONENV="$CRONENV S3CMDPARAMS=$S3CMDPARAMS"
+  CRONENV="$CRONENV S3CMDPARAMS=$S3CMDPARAMS"
   echo "$CRON_SCHEDULE root $CRONENV bash /run.sh backup" >> $CRONFILE
+
   echo "Starting CRON scheduler: $(date)"
   cron
   exec tail -f $LOG
-elif [[ $OPTION = "backup" ]]; then
-  # Do the synchronization
-  echo "Starting sync: $(date)" > $LOG
-  /usr/local/bin/s3cmd sync /data/ $S3PATH > $LOG 2>&1
-  echo "Finished sync: $(date)" > $LOG
-fi
 
-rm -f $LOCKFILE
+elif [[ $OPTION = "backup" ]]; then
+  echo "Starting sync: $(date)" | tee -a $LOG
+  if [ -f $LOCKFILE ]; then
+    echo "$LOCKFILE detected, exiting! Already running?" | tee -a $LOG
+    exit 1
+  else
+    touch $LOCKFILE
+  fi
+  /usr/local/bin/s3cmd sync /data/ $S3PATH 2>&1 | tee -a $LOG
+  rm -f $LOCKFILE
+  echo "Finished sync: $(date)" | tee -a $LOG
+else
+  echo "Unsupported option: $OPTION" | tee -a $LOG
+  exit 1
+fi

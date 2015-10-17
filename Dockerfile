@@ -8,7 +8,10 @@ RUN apt-get update && \
       cron python python-magic python-pip && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install s3cmd
+RUN pip install s3cmd && \
+  rm -rf /tmp/pip_build_root/
+
+RUN mkdir -p /data
 
 ADD s3cmd.cfg /root/.s3cfg
 ADD run.sh /
