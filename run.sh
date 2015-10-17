@@ -14,6 +14,9 @@ S3CMDPARAMS=${S3CMDPARAMS}
 LOCKFILE="/tmp/s3cmd.lock"
 LOG="/var/log/cron.log"
 
+echo "access_key=$ACCESS_KEY" >> /root/.s3cfg
+echo "secret_key=$SECRET_KEY" >> /root/.s3cfg
+
 if [ ! -e $LOG ]; then
   mkfifo $LOG
 fi
@@ -26,15 +29,10 @@ else
   touch $LOCKFILE
 fi
 
-echo "access_key=$ACCESS_KEY" >> /root/.s3cfg
-echo "secret_key=$SECRET_KEY" >> /root/.s3cfg
-
 if [[ $OPTION = "start" ]]; then
   CRONFILE="/etc/cron.d/s3backup"
   CRONENV=""
   echo "Adding CRON schedule: $CRON_SCHEDULE"
-  CRONENV="$CRONENV ACCESS_KEY=$ACCESS_KEY"
-  CRONENV="$CRONENV SECRET_KEY=$SECRET_KEY"
   CRONENV="$CRONENV S3PATH=$S3PATH"
   #CRONENV="$CRONENV S3CMDPARAMS=$S3CMDPARAMS"
   echo "$CRON_SCHEDULE root $CRONENV bash /run.sh backup" >> $CRONFILE
