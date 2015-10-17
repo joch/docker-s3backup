@@ -39,19 +39,22 @@ if [[ $OPTION = "start" ]]; then
 
   echo "Starting CRON scheduler: $(date)"
   cron
-  exec tail -f $LOG
+  exec tail -f $LOG 2> /dev/null
 
 elif [[ $OPTION = "backup" ]]; then
-  echo "Starting sync: $(date)" | tee -a $LOG
+  echo "Starting sync: $(date)" | tee $LOG
+
   if [ -f $LOCKFILE ]; then
     echo "$LOCKFILE detected, exiting! Already running?" | tee -a $LOG
     exit 1
   else
     touch $LOCKFILE
   fi
+
   /usr/local/bin/s3cmd sync /data/ $S3PATH 2>&1 | tee -a $LOG
   rm -f $LOCKFILE
   echo "Finished sync: $(date)" | tee -a $LOG
+
 else
   echo "Unsupported option: $OPTION" | tee -a $LOG
   exit 1
