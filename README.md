@@ -12,7 +12,7 @@ the launch of the container.
 - ACCESS_KEY - your AWS access key
 - SECRET_KEY - your AWS secret key
 - S3PATH - your S3 bucket and path
-- S3CMDPARAMS - not yet implemented
+- S3CMDPARAMS - custom parameters to s3cmd
 
 Files are by default backed up once every hour. You can customize this behavior
 using an environment variable which uses the standard CRON notation.
