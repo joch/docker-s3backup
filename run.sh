@@ -17,6 +17,8 @@ LOG="/var/log/cron.log"
 echo "access_key=$ACCESS_KEY" >> /root/.s3cfg
 echo "secret_key=$SECRET_KEY" >> /root/.s3cfg
 
+trap "rm -f $LOCKFILE" EXIT
+
 if [ ! -e $LOG ]; then
   touch $LOG
 fi
